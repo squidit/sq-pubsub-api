@@ -1,3 +1,3 @@
-const PubSub = require('')
+const PubSub = require('./src/pubsub')
 
 module.exports = PubSub
