@@ -8,22 +8,9 @@ Projeto que encapsula chamadas para a API do PubSub do GCloud.
 $ npm install github:squidit/sq-pubsub-api
 ```
 
-## Como obter um JWT válido
-
-Para realizar as chamadas para a API do PubSub, é necessário obter um JWT de uma conta de serviço com as devidas permissões configuradas para o PubSub.
-
-Primeiramente será necessário salvar um *credentials.json* com a respectiva conta de serviço na sua máquina, depois executar os seguintes comandos:
-
-```sh
-$ gcloud auth activate-service-account --key-file=[PATH_DO_CREDENTIALS.JSON]
-$ gcloud auth print-access-token # Após essa etapa você irá ter um JWT válido
-$ gcloud auth list # Para listar as contas de serviços
-$ gcloud config set account [SUA_CONTA_PRINCIPAL] # Para voltar a usar a sua credencial default
-```
-
 ## Uso
 
-O projeto expõe duas classes, uma para manipular as subscriptions e outra topics.
+O projeto expõe uma classe `PubSub` para manipular subscriptions e topics.
 
 ### Subscription
 
