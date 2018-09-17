@@ -1,0 +1,15 @@
+{
+  "name": "sq-pubsub-api",
+  "version": "1.0.0",
+  "description": "Lib para o consumo de API Rest do GCloud PubSub",
+  "main": "index.js",
+  "scripts": {},
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "got": "^9.0.0",
+    "gtoken": "^2.3.0",
+    "lodash": "^4.17.10"
+  }
+}
