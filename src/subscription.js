@@ -2,16 +2,30 @@ const { isNil, isArray, isFunction } = require('lodash')
 const sleep = require('./utils/sleep.util')
 const log = require('./utils/log.util')
 const pubsub = require('./clients/pubsub.client')
-
 class Subscription {
   constructor (googleProject, googleToken, subscription) {
     this.googleProject = googleProject
     this.googleToken = googleToken
     this.subscription = subscription
+    this.sleepMs = null
+    this.lastPing = null
 
     if (isNil(this.googleProject)) throw new Error('googleProject cannot be nil')
     if (isNil(this.googleToken)) throw new Error('googleToken cannot be nil')
     if (isNil(this.subscription)) throw new Error('subscription cannot be nil')
+  }
+
+  _updateLastPing () {
+    this.lastPing = new Date()
+  }
+
+  _validateLastPing (that) {
+    log('Validating last ping')
+    if (!that.lastPing) return
+    if (new Date().getTime() - that.lastPing.getTime() > that.sleepMs * 3) {
+      log(`Killing process because last ping = ${that.lastPing.toISOString()}`)
+      process.exit(1)
+    }
   }
 
   async pull (maxMessages) {
@@ -31,23 +45,28 @@ class Subscription {
 
   async listen (handler, { maxMessages, limitMessageTime, poolSleep } = {}) {
     if (!isFunction(handler)) throw new Error('handler must be a function')
-    const sleepMs = poolSleep || 30000
+    this.sleepMs = poolSleep || 30000
+
+    // Validate lastPing
+    setInterval(this._validateLastPing, this.sleepMs * 3, this)
 
     log(`Listening [${this.subscription}]...`)
     while (true) {
       try {
         const messages = await this.pull(maxMessages || 1)
+        this._updateLastPing()
 
         // No messages
         if (messages.length === 0) {
-          log(`No messages on [${this.subscription}] - sleeping for ${sleepMs}ms...`)
-          await sleep(sleepMs)
+          log(`No messages on [${this.subscription}] - sleeping for ${this.sleepMs}ms...`)
+          await sleep(this.sleepMs)
           continue
         }
 
         // Process retrieved messages
         const processMessage = async ({ message, ackId }) => {
           try {
+            this._updateLastPing()
             if (!message.data) {
               return
             }
@@ -70,8 +89,8 @@ class Subscription {
         }
         await Promise.all(messages.map(message => processMessage(message)))
       } catch (err) {
-        log(`Error on listen [${this.subscription}] - ${err.message} - sleeping for ${sleepMs}ms...`)
-        await sleep(sleepMs)
+        log(`Error on listen [${this.subscription}] - ${err.message} - sleeping for ${this.sleepMs}ms...`)
+        await sleep(this.sleepMs)
       }
     }
   }
