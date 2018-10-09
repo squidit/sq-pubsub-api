@@ -24,7 +24,7 @@ class Subscription {
     if (!that.lastPing) return
     if (new Date().getTime() - that.lastPing.getTime() > that.sleepMs * 3) {
       log(`Killing process because last ping = ${that.lastPing.toISOString()}`)
-      process.exit(1)
+      process.exit(108)
     }
   }
 
