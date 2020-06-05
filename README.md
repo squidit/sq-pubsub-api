@@ -47,7 +47,7 @@ Exemplo de código para publicar uma mensagem em um tópico:
 ```js
 const SqPubSub = require('sq-pubsub-api')
 const pubsub = new SqPubSub('credentials.json')
-const topic = pubsub.subcription('subscription-name')
+const topic = pubsub.topic('subscription-name')
 
 const message = {
   teste: true
