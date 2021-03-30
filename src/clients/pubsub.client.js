@@ -13,6 +13,7 @@ async function makePost (url, body, token) {
     })
     return result
   } catch (err) {
+    console.log(err)
     throw new PubSubError(err.statusCode || 0, get(err, 'response.body.error.message', err.message))
   }
 }
