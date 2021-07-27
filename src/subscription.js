@@ -22,7 +22,7 @@ class Subscription {
   _validateLastPing (that) {
     log('Validating last ping')
     if (!that.lastPing) return
-    if (new Date().getTime() - that.lastPing.getTime() > that.maxTimeoutInMs) {
+    if ((new Date().getTime() - that.lastPing.getTime()) > that.maxTimeoutInMs) {
       log(`Killing process because last ping = ${that.lastPing.toISOString()}`)
       process.exit(108)
     }
