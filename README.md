@@ -39,6 +39,7 @@ await sub.listen(handler, options)
   - `options.maxMessages`: número máximo de mensagens que serão processadas a cada ciclo (default: 1)
   - `options.limitMessageTime`: tempo máximo em milisegundos que uma mensagem pode aguardar no tópico antes de ser ignorada (default: infinito)
   - `options.poolSleep`: tempo em milisegundos que será aguardado entre as requisições caso não tenha nenhuma mensagem para ser entregue (default: 30 segundos)
+  - `options.shouldValidateLastPing`: Se deve validar se o recebeu alguma mensagem nos ultimos segunds (o valor usado é o `options.poolSleep`)
 
 ### Topic
 

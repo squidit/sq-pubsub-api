@@ -43,12 +43,14 @@ class Subscription {
     await pubsub.ack(this.googleProject, this.subscription, token, ackIds)
   }
 
-  async listen (handler, { maxMessages, limitMessageTime, poolSleep } = {}) {
+  async listen (handler, { maxMessages, limitMessageTime, poolSleep, shouldValidateLastPing = true } = {}) {
     if (!isFunction(handler)) throw new Error('handler must be a function')
     this.sleepMs = poolSleep || 30000
 
-    // Validate lastPing
-    setInterval(this._validateLastPing, this.sleepMs * 3, this)
+    if (shouldValidateLastPing) {
+      // Validate lastPing
+      setInterval(this._validateLastPing, this.sleepMs * 3, this)
+    }
 
     log(`Listening [${this.subscription}]...`)
     while (true) {
