@@ -9,6 +9,7 @@ class Subscription {
     this.subscription = subscription
     this.sleepMs = null
     this.lastPing = null
+    this.timerInterval = null
 
     if (isNil(this.googleProject)) throw new Error('googleProject cannot be nil')
     if (isNil(this.googleToken)) throw new Error('googleToken cannot be nil')
@@ -42,12 +43,15 @@ class Subscription {
     const token = await this.googleToken.getToken()
     await pubsub.ack(this.googleProject, this.subscription, token, ackIds)
   }
-
+  _resetInterval () {
+    clearInterval(this.timerInterval)
+    this.timerInterval = setInterval(this._validateLastPing, this.sleepMs * 3, this)
+  }
   async listen (handler, { maxMessages, limitMessageTime, poolSleep, maxTimeoutInMs } = {}) {
     if (!isFunction(handler)) throw new Error('handler must be a function')
     this.sleepMs = poolSleep || 30000
-    this.maxTimeoutInMs = maxTimeoutInMs || 30 * 1000 * 60 // 30 minutos
-    setInterval(this._validateLastPing, this.sleepMs * 3, this)
+    this.maxTimeoutInMs = maxTimeoutInMs || this.sleepMs * 3 // 1 minuto e meio
+    this.timerInterval = setInterval(this._validateLastPing, this.sleepMs * 3, this)
 
 
     log(`Listening [${this.subscription}]...`)
@@ -67,6 +71,7 @@ class Subscription {
         const processMessage = async ({ message, ackId }) => {
           try {
             this._updateLastPing()
+            this._resetInterval()
             if (!message.data) {
               return
             }
