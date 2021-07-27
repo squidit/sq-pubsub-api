@@ -22,7 +22,7 @@ class Subscription {
   _validateLastPing (that) {
     log('Validating last ping')
     if (!that.lastPing) return
-    if (new Date().getTime() - that.lastPing.getTime() > that.sleepMs * 3) {
+    if ((new Date().getTime() - that.lastPing.getTime()) > that.maxTimeoutInMs) {
       log(`Killing process because last ping = ${that.lastPing.toISOString()}`)
       process.exit(108)
     }
@@ -43,14 +43,12 @@ class Subscription {
     await pubsub.ack(this.googleProject, this.subscription, token, ackIds)
   }
 
-  async listen (handler, { maxMessages, limitMessageTime, poolSleep, shouldValidateLastPing = true } = {}) {
+  async listen (handler, { maxMessages, limitMessageTime, poolSleep, maxTimeoutInMs } = {}) {
     if (!isFunction(handler)) throw new Error('handler must be a function')
     this.sleepMs = poolSleep || 30000
+    this.maxTimeoutInMs = maxTimeoutInMs || 30 * 1000 * 60 // 30 minutos
+    setInterval(this._validateLastPing, this.sleepMs * 3, this)
 
-    if (shouldValidateLastPing) {
-      // Validate lastPing
-      setInterval(this._validateLastPing, this.sleepMs * 3, this)
-    }
 
     log(`Listening [${this.subscription}]...`)
     while (true) {
