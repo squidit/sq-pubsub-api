@@ -2,6 +2,8 @@ const { isNil, isArray, isFunction } = require('lodash')
 const sleep = require('./utils/sleep.util')
 const log = require('./utils/log.util')
 const pubsub = require('./clients/pubsub.client')
+const http = require('http')
+
 class Subscription {
   constructor (googleProject, googleToken, subscription) {
     this.googleProject = googleProject
@@ -53,12 +55,12 @@ class Subscription {
     this.maxTimeoutInMs = maxTimeoutInMs || this.sleepMs * 3 // 1 minuto e meio
     this.timerInterval = setInterval(this._validateLastPing, this.sleepMs * 3, this)
 
-
+    this._createWebServer()
+    this._updateLastPing()
     log(`Listening [${this.subscription}]...`)
     while (true) {
       try {
         const messages = await this.pull(maxMessages || 1)
-        this._updateLastPing()
 
         // No messages
         if (messages.length === 0) {
@@ -99,6 +101,72 @@ class Subscription {
       }
     }
   }
- }
+
+  _createWebServer () {
+    if (!process.env.PORT) {
+      console.log('PORT variable is not defined')
+      return
+    }
+    //  Cria o servidor HTTP server
+    const server = http.createServer((req, res) => {
+      if (req.url !== '/status') {
+        res.writeHead(404)
+        res.end('Page not found')
+        return
+      }
+      if (this._policyToThrowErrorFn()) {
+        res.writeHead(500)
+      } else {
+        res.writeHead(200)
+      }
+      if (!this.lastPing) {
+        res.end('No Message received yet')
+      } else {
+        const result = this._parseLastPingInMessage(this.lastPing)
+        res.end(`Last Ping was ${result.message}`)
+      }
+    })
+    server.listen(process.env.PORT)
+    console.log(`Webserver Listening HTTP requests on ${process.env.PORT}`)
+  }
+
+  _policyToThrowErrorFn () {
+    if (!this.lastPing) return false
+    const diff = new Date().getTime() - this.lastPing.getTime()
+    const MAX_TIMEOUT = this.maxTimeoutInMs
+    return diff > MAX_TIMEOUT
+  }
+
+  _parseLastPingInMessage (lastPing) {
+    if (!lastPing) return null
+    const diff = new Date().getTime() - lastPing.getTime()
+    let unity = 'days'
+    let difference = null
+
+    if (diff < 1000) {
+      difference = diff
+      unity = 'miliseconds'
+    } else if (diff < (1000 * 60)) { // Em segundos
+      difference = parseInt(diff / 1000)
+      unity = 'seconds'
+    } else if (diff < (1000 * 60 * 60)) { //  Em Minutos
+      difference = parseInt(diff / (1000 * 60))
+      unity = 'minutes'
+    } else if (diff < (1000 * 60 * 60 * 60)) { //  Em Horas
+      difference = parseInt(diff / (1000 * 60 * 60))
+      unity = 'hours'
+    } else {
+      difference = parseInt(diff / (1000 * 60 * 60 * 24))
+      unity = 'days'
+    }
+
+    return {
+      difference,
+      unity,
+      diffMs: diff,
+      message: `${difference} ${unity} ago`
+    }
+  }
+}
 
 module.exports = Subscription
