@@ -55,3 +55,13 @@ const message = {
 }
 const messageId = await topic.publish(message)
 ```
+
+
+### API
+A lib serve um endpoint para consulta de tempo da ultima msg recebida
+o endpoint pode ser definido a variavel de ambiente `PORT`
+
+#### Variaveis
+- `PORT`- Porta HTTP que o endpoint vai ser servido
+- `MAX_TIMEOUT_PING` - Tempo em segundos para definir o tempo maximo que o topico pode ficar sem mensagem, quando ultrapassado esse tempo, o endpoint `/status` gera um erro 500
+  - Padrão é de 1 hora
