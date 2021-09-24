@@ -60,6 +60,7 @@ class Subscription {
     log(`Listening [${this.subscription}]...`)
     while (true) {
       try {
+        this._updateLastPing()
         const messages = await this.pull(maxMessages || 1)
 
         // No messages
@@ -72,7 +73,6 @@ class Subscription {
         // Process retrieved messages
         const processMessage = async ({ message, ackId }) => {
           try {
-            this._updateLastPing()
             this._resetInterval()
             if (!message.data) {
               return
