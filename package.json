@@ -8,7 +8,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "got": "^9.0.0",
+    "got": "^11.8.5",
     "gtoken": "^2.3.0",
     "lodash": "^4.17.19"
   }
